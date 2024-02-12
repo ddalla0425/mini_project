@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.management.animal.model.dao.AnimalDAO">
+    <resultMap id="AnimalLogResultMap" type="AnimalLogDTO">
+        <id property="logCode" column="log_code"/>
+        <result property="logDate" column="log_date"/>
+        <result property="logRemark" column="log_remark"/>
+        <result property="admissionStatus" column="admission_status"/>
+        <association property="statusDTO" javaType="StatusDTO">
+            <id property="statusCode" column="status_code"/>
+            <result property="statusName" column="status_name"/>
+        </association>
+        <association property="animalDTO" javaType="AnimalDTO">
+            <id property="animalCode" column="animal_code"/>
+            <result property="animalGender" column="animal_gender"/>
+            <result property="animalColor" column="animal_color"/>
+            <result property="animalAge" column="animal_age"/>
+            <result property="animalWeight" column="animal_weight"/>
+            <result property="builtInChip" column="built_in_chip"/>
+            <result property="neuteringSurgery" column="neutering_surgery"/>
+            <result property="animalCollar" column="animal_collar"/>
+            <result property="rescueDate" column="rescue_date"/>
+            <result property="capturePlace" column="capture_place"/>
+            <result property="healthCondition" column="health_condition"/>
+            <association property="categoryDTO" javaType="CategoryDTO">
+                <id property="categoryCode" column="category_code"/>
+                <result property="categoryName" column="category_name"/>
+                <result property="refCategoryCode" column="ref_category_code"/>
+                <result property="refCategoryName" column="ref_category_name"/>
+            </association>
+        </association>
+    </resultMap>
+
+    <select id="selectAllAnimalList" resultMap="AnimalLogResultMap">
+        SELECT
+            a.*,
+            b.*,
+            c.*,
+            d.*,
+            e.category_name ref_category_name
+        FROM
+            tbl_animal_log a
+                JOIN
+            tbl_animal b ON (a.animal_code = b.animal_code)
+                JOIN
+            tbl_state_change c ON (a.status_code = c.status_code)
+                JOIN
+            tbl_category d ON (b.category_code = d.category_code)
+                JOIN
+            tbl_category e ON (d.ref_category_code = e.category_code)
+        WHERE
+            d.ref_category_code IS NOT NULL
+        ORDER BY
+            b.animal_code;
+    </select>
+    <select id="selectAnimalByCondition" resultMap="AnimalLogResultMap">
+        SELECT
+            a.*,
+            b.*,
+            c.*,
+            d.*,
+            e.category_name ref_category_name
+        FROM
+            tbl_animal_log a
+                JOIN
+            tbl_animal b ON (a.animal_code = b.animal_code)
+                JOIN
+            tbl_state_change c ON (a.status_code = c.status_code)
+                JOIN
+            tbl_category d ON (b.category_code = d.category_code)
+                JOIN
+            tbl_category e ON (d.ref_category_code = e.category_code)
+        <where>
+            d.ref_category_code IS NOT NULL
+            <if test='searchOption == "animalCode"'>
+                AND b.animal_code = #{ searchValue }
+            </if>
+            <if test='searchOption == "refCategoryName" and searchValue == "개"'>
+                 AND e.category_name = #{ searchValue }
+            </if>
+            <if test='searchOption == "refCategoryName" and searchValue == "고양이"'>
+                AND e.category_name = #{ searchValue }
+            </if>
+            <if test='searchOption == "refCategoryName" and searchValue == "기타"'>
+                AND e.category_name = #{ searchValue }
+            </if>
+            <if test='searchOption == "categoryName"'>
+                AND d.category_name LIKE CONCAT('%',#{ searchValue },'%')
+            </if>
+            <if test='searchOption == "내장칩"'>
+                AND b.built_in_chip = 'Y'
+            </if>
+            <if test='searchOption == "중성화"'>
+                AND b.neutering_surgery = 'Y'
+            </if>
+            <if test='searchOption == "목걸이"'>
+                AND b.animal_collar = 'Y'
+            </if>
+            <if test='searchOption == "animalColor"'>
+                AND b.animal_color LIKE CONCAT('%',#{ searchValue },'%')
+            </if>
+            <if test='searchOption == "checkOutAnimal"'>
+                AND a.admission_status = 'N'
+            </if>
+        </where>
+    </select>
+    <insert id="insertAnimal" parameterType="AnimalDTO">
+        <selectKey keyProperty="animalCode" order="AFTER" resultType="_int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO
+            tbl_animal(animal_gender, animal_color, animal_age, animal_weight, built_in_chip, neutering_surgery, animal_collar, rescue_date, capture_place, health_condition, category_code)
+        VALUES
+            (#{ animalGender }, #{ animalColor }, #{ animalAge }, #{ animalWeight }, #{ builtInChip }, #{ neuteringSurgery }, #{ animalCollar }, #{ rescueDate }, #{ capturePlace }, #{ healthCondition }, #{ categoryCode })
+    </insert>
+    <insert id="insertAnimalLog" parameterType="AnimalLogDTO">
+             INSERT INTO
+                 tbl_animal_log(log_date, log_remark, admission_status, status_code, animal_code)
+             VALUES
+                (#{ logDate }, #{ logRemark }, #{ admissionStatus }, #{ statusCode }, #{ animalCode })
+    </insert>
+    <update id="updateAnimal" parameterType="AnimalDTO">
+        UPDATE
+            tbl_animal
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="animalGender != null and animalGender != 'SKIP'">
+                animal_gender = #{ animalGender },
+            </if>
+            <if test="animalColor != null and animalColor != 'SKIP'">
+                animal_color = #{ animalColor },
+            </if>
+            <if test="animalAge != null and animalAge != 'SKIP'">
+                animal_age = #{ animalAge },
+            </if>
+            <if test="animalWeight != null and animalWeight != 'SKIP'">
+                animal_weight = #{ animalWeight },
+            </if>
+            <if test="builtInChip != null and builtInChip != 'SKIP'">
+                built_in_chip = #{ builtInChip },
+            </if>
+            <if test="neuteringSurgery != null and neuteringSurgery != 'SKIP'">
+                neutering_surgery = #{ neuteringSurgery },
+            </if>
+            <if test="animalCollar != null and animalCollar != 'SKIP'">
+                animal_collar = #{ animalCollar },
+            </if>
+            <if test="rescueDate != null and rescueDate != 'SKIP'">
+                rescue_date = #{ rescueDate },
+            </if>
+            <if test="capturePlace != null and capturePlace != 'SKIP'">
+                capture_place = #{ capturePlace },
+            </if>
+            <if test="healthCondition != null and healthCondition != 'SKIP'">
+                health_condition = #{ healthCondition },
+            </if>
+            <if test="categoryCode != null and categoryCode != 0">
+                category_code = #{ categoryCode }
+            </if>
+        </trim>
+        WHERE
+            animal_code = #{ animalCode }
+    </update>
+    <update id="updateAnimalLog">
+        UPDATE
+        tbl_animal_log
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="logDate != null and logDate != 'SKIP'">
+                log_date = #{ logDate },
+            </if>
+            <if test="logRemark != null and logRemark != 'SKIP'">
+                log_remark = #{ logRemark },
+            </if>
+            <if test="statusCode != null and statusCode != 0">
+                status_code = #{ statusCode },
+            </if>
+            <choose>
+                <when test="statusCode == 1 or statusCode == 2">
+                    admission_status = 'Y',
+                </when>
+                <otherwise>
+                    admission_status = 'N',
+                </otherwise>
+            </choose>
+        </trim>
+        WHERE
+            animal_code = #{ animalCode }
+    </update>
+
+    <delete id="deleteAnimalLog" parameterType="AnimalDTO">
+        DELETE FROM
+            tbl_animal_log
+        WHERE
+            animal_code = #{ animalCode }
+    </delete>
+    <delete id="deleteAnimal" parameterType="AnimalDTO">
+        DELETE FROM
+            tbl_animal
+        WHERE
+            animal_code = #{ animalCode }
+    </delete>
+</mapper>
+<!-- AnimalDAO.xml -->
