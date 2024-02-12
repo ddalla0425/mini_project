@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+    <!-- 기본 설정 -->
+    <properties resource="config/connection-info.properties"/>
+
+    <typeAliases>
+        <typeAlias type="com.management.animal.model.dto.AnimalDTO" alias="AnimalDTO"/>
+        <typeAlias type="com.management.animal.model.dto.AnimalLogDTO" alias="AnimalLogDTO"/>
+        <typeAlias type="com.management.animal.model.dto.CategoryDTO" alias="CategoryDTO"/>
+        <typeAlias type="com.management.animal.model.dto.StatusDTO" alias="StatusDTO"/>
+    </typeAliases>
+
+    <!-- 환경 설정 -->
+    <environments default="dev">
+        <environment id="dev">
+            <transactionManager type="JDBC"/>
+                <dataSource type="POOLED">
+                    <property name="driver" value="${driver}"/>
+                    <property name="url" value="${url}"/>
+                    <property name="username" value="${username}"/>
+                    <property name="password" value="${password}"/>
+                </dataSource>
+        </environment>
+    </environments>
+
+    <!-- mapper 파일 추가 -->
+    <mappers>
+        <package name="com.management.animal.model.dao"/>
+    </mappers>
+</configuration>
+
